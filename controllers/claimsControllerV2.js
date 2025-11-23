@@ -4,7 +4,6 @@ import axios from "axios";
 import { Readability } from "@mozilla/readability";
 import { JSDOM, VirtualConsole } from "jsdom";
 import Claim from "../models/claimsModel.js";
-import { pipeline } from "@xenova/transformers";
 
 puppeteer.use(StealthPlugin());
 
