@@ -9,7 +9,7 @@ const SourceSchema = new mongoose.Schema({
 const VerifiedClaimSchema = new mongoose.Schema(
   {
     claim: { type: String, required: true, trim: true },
-
+    // user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     verdict: {
       type: String,
       enum: [

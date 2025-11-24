@@ -4,6 +4,7 @@ import axios from "axios";
 import { Readability } from "@mozilla/readability";
 import { JSDOM, VirtualConsole } from "jsdom";
 import Claim from "../models/claimsModel.js";
+import VerifiedClaim from "../models/verifiedClaimModel.js";
 
 puppeteer.use(StealthPlugin());
 
@@ -1060,3 +1061,26 @@ export const processChunks = async (req, res) => {
         return res.status(500).json({ error: "Failed to process chunks" });
     }
 };
+
+//get claims with verification
+export const getClaimsWithVerification = async (req, res) => {
+    try {
+        const claims = await Claim.find({});
+        const verifiedClaims = await VerifiedClaim.find({});
+
+        const merged = claims.map(c => {
+            const verified = verifiedClaims.find(v => v.claim === c.resolvedClaim);
+            return {
+                ...c.toObject(),
+                verdict: verified?.verdict || null,
+                explanation: verified?.explanation || null,
+                sources: verified?.sources || []
+            };
+        });
+        res.json({ success: true, claims: merged });
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, error: "Server error" });
+    }
+}
