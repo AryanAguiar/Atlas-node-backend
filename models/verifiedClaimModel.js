@@ -29,6 +29,8 @@ const VerifiedClaimSchema = new mongoose.Schema(
     total_results: { type: Number, default: 0 },
     trusted_results: { type: Number, default: 0 },
 
+    explanation_snippet: { type: String, default: null },
+
     explanation: { type: String, default: null },
     sources: [SourceSchema],
   },

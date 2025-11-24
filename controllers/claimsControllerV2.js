@@ -1073,6 +1073,7 @@ export const getClaimsWithVerification = async (req, res) => {
             return {
                 ...c.toObject(),
                 verdict: verified?.verdict || null,
+                explanation_snipper: verified?.explanation_snippet || null,
                 explanation: verified?.explanation || null,
                 sources: verified?.sources || []
             };
