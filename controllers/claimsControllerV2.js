@@ -101,23 +101,23 @@ function resolvePronouns(sentences) {
         "Saudi", "Arabia", "UAE", "Dubai", "Qatar", "Kuwait", "Oman",
 
         // ===== NATIONALITIES / ADJECTIVES =====
-        "Pakistani", "Bangladeshi", "Nepali", "Bhutanese","Russian", "Ukrainian", "Chinese", "Japanese", "Korean",
-        "American", "Canadian", "Mexican", "Brazilian", "Argentinian","German", "French", "Italian", "Spanish", "British", "Irish", "Chechnya",
-        "Australian", "Egyptian", "Saudi", "Arab", "African", "European","Afghan", "Albanian", "Algerian", "Angolan",
-        "Argentinian", "Armenian", "Australian", "Austrian", "Azerbaijani","Bahamian", "Bangladeshi", "Barbadian", "Belarusian", "Belgian",
-        "Belizean", "Beninese", "Bhutanese", "Bolivian", "Bosnian","Botswanan", "Brazilian", "British", "Bulgarian", "Burmese",
-        "Burundian", "Georgian", "Cambodian", "Cameroonian", "Canadian", "Chadian", "Chilean","Chinese", "Colombian", "Congolese", "Costa Rican", "Croatian",
-        "Cuban", "Cypriot", "Czech","Danish", "Dominican", "Dutch","Ecuadorian", "Egyptian", "Emirati", "English", "Estonian",
-        "Ethiopian","Fijian", "Filipino", "Finnish", "French","Gabonese", "Gambian", "Georgian", "German", "Ghanaian", "Greek",
-        "Guatemalan", "Guyanese", "Haitian", "Honduran", "Hungarian","Icelandic", "Indian", "Indonesian", "Iranian", "Iraqi",
-        "Irish", "Israeli", "Italian", "Ivorian","Jamaican", "Japanese", "Jordanian","Kazakh", "Kenyan", "Korean", "Kuwaiti", "Kyrgyz","Lao", "Latvian", "Lebanese", "Liberian", "Libyan", "Lithuanian",
-        "Luxembourgish","Macedonian", "Malagasy", "Malawian", "Malaysian", "Maldivian","Malian", "Maltese", "Mauritanian", "Mexican", "Moldovan",
-        "Mongolian", "Montenegrin", "Moroccan", "Mozambican", "Myanmar","Namibian", "Nepali", "New Zealander", "Nicaraguan", "Nigerian",
-        "Norwegian","Omani","Pakistani", "Panamanian", "Paraguayan", "Peruvian", "Philippine","Polish", "Portuguese", "Puerto Rican",
-        "Qatari","Romanian", "Russian", "Rwandan","Salvadoran", "Samoan", "Saudi", "Scottish", "Senegalese",
-        "Serbian", "Singaporean", "Slovak", "Slovenian", "Somalian","South African", "Spanish", "Sri Lankan", "Sudanese",
-        "Surinamese", "Swazi", "Swedish", "Swiss", "Syrian","Tajik", "Tanzanian", "Thai", "Togolese", "Tongan", "Trinidadian",
-        "Tunisian", "Turkish", "Turkmen","Ugandan", "Ukrainian", "Uruguayan", "Uzbek","Venezuelan", "Vietnamese", "Welsh","Yemeni","Zambian", "Zimbabwean", "Chechen", "European",
+        "Pakistani", "Bangladeshi", "Nepali", "Bhutanese", "Russian", "Ukrainian", "Chinese", "Japanese", "Korean",
+        "American", "Canadian", "Mexican", "Brazilian", "Argentinian", "German", "French", "Italian", "Spanish", "British", "Irish", "Chechnya",
+        "Australian", "Egyptian", "Saudi", "Arab", "African", "European", "Afghan", "Albanian", "Algerian", "Angolan",
+        "Argentinian", "Armenian", "Australian", "Austrian", "Azerbaijani", "Bahamian", "Bangladeshi", "Barbadian", "Belarusian", "Belgian",
+        "Belizean", "Beninese", "Bhutanese", "Bolivian", "Bosnian", "Botswanan", "Brazilian", "British", "Bulgarian", "Burmese",
+        "Burundian", "Georgian", "Cambodian", "Cameroonian", "Canadian", "Chadian", "Chilean", "Chinese", "Colombian", "Congolese", "Costa Rican", "Croatian",
+        "Cuban", "Cypriot", "Czech", "Danish", "Dominican", "Dutch", "Ecuadorian", "Egyptian", "Emirati", "English", "Estonian",
+        "Ethiopian", "Fijian", "Filipino", "Finnish", "French", "Gabonese", "Gambian", "Georgian", "German", "Ghanaian", "Greek",
+        "Guatemalan", "Guyanese", "Haitian", "Honduran", "Hungarian", "Icelandic", "Indian", "Indonesian", "Iranian", "Iraqi",
+        "Irish", "Israeli", "Italian", "Ivorian", "Jamaican", "Japanese", "Jordanian", "Kazakh", "Kenyan", "Korean", "Kuwaiti", "Kyrgyz", "Lao", "Latvian", "Lebanese", "Liberian", "Libyan", "Lithuanian",
+        "Luxembourgish", "Macedonian", "Malagasy", "Malawian", "Malaysian", "Maldivian", "Malian", "Maltese", "Mauritanian", "Mexican", "Moldovan",
+        "Mongolian", "Montenegrin", "Moroccan", "Mozambican", "Myanmar", "Namibian", "Nepali", "New Zealander", "Nicaraguan", "Nigerian",
+        "Norwegian", "Omani", "Pakistani", "Panamanian", "Paraguayan", "Peruvian", "Philippine", "Polish", "Portuguese", "Puerto Rican",
+        "Qatari", "Romanian", "Russian", "Rwandan", "Salvadoran", "Samoan", "Saudi", "Scottish", "Senegalese",
+        "Serbian", "Singaporean", "Slovak", "Slovenian", "Somalian", "South African", "Spanish", "Sri Lankan", "Sudanese",
+        "Surinamese", "Swazi", "Swedish", "Swiss", "Syrian", "Tajik", "Tanzanian", "Thai", "Togolese", "Tongan", "Trinidadian",
+        "Tunisian", "Turkish", "Turkmen", "Ugandan", "Ukrainian", "Uruguayan", "Uzbek", "Venezuelan", "Vietnamese", "Welsh", "Yemeni", "Zambian", "Zimbabwean", "Chechen", "European",
 
         // ===== INDIAN STATES =====
         "Maharashtra", "Goa", "Gujarat", "Rajasthan", "Punjab",
@@ -386,21 +386,6 @@ const PURE_OPINION = [
     /\barguably\b/i
 ];
 
-const ATTRIBUTION_HARD = [
-    /\bhe said\b/i,
-    /\bshe said\b/i,
-    /\bthey said\b/i,
-    /\breported that\b/i,
-    /\bclaimed that\b/i,
-    /\baccording to\b/i,
-    /\bexperts say\b/i,
-    /\banalysts say\b/i,
-    /\bcritics say\b/i,
-    /\bstated that\b/i,
-    /\bannounced that\b/i,
-    /\btold reporters\b/i
-];
-
 const SUBJECTIVE = [
     /\bgood\b/i, /\bbad\b/i, /\bterrible\b/i, /\bexcellent\b/i,
     /\bimportant\b/i, /\bcrucial\b/i, /\bshocking\b/i,
@@ -428,15 +413,6 @@ const NOISE = [
 const HEADLINES = [
     /^[A-Z][A-Za-z\s]+$/,                   // Title-like
     /^[A-Z][a-z]+\s[A-Z][a-z]+$/            // Two-word title
-];
-
-// Attribution-only (not claims)
-const ATTRIBUTION = [
-    /^\w+\s+(said|told|announced|claimed|reported|argued|warned|insisted)\b/i,
-    /^according to\b/i,
-    /\bsaid:\b/i,
-    /\brepeated\b/i,
-    /\breiterated\b/i
 ];
 
 const FILTER_BLOCKLIST = [
@@ -520,6 +496,13 @@ const EMOTIONAL = [
     /\bheartfelt\b/i
 ];
 
+const DENIALS = [
+    /\bdisputes? (these|the|this)? claims?\b/i,
+    /\bdenies? (these|the|this)? claims?\b/i,
+    /\brejects? (these|the|this)? claims?\b/i,
+    /\bdismissed? (these|the|this)? claims?\b/i
+];
+
 const PERSONAL_STORY = [
     /\bhis wife\b/i,
     /\bher husband\b/i,
@@ -559,11 +542,6 @@ const PERSONAL_STORY = [
     /\bspoke about\b/i,
 
     // typical human-interest patterns
-    /\bfor the first time\b/i,
-    /\bfor years\b/i,
-    /\bfor months\b/i,
-    /\bfor days\b/i,
-    /\bfor decades\b/i,
     /\bhis final moments\b/i,
     /\bher final moments\b/i,
     /\bthe last time he\b/i,
@@ -703,11 +681,59 @@ function mergedRelatedSentences(sentences) {
     return out;
 }
 
-const ALL_HARD_REJECT = [...NOISE, ...LIVE_BLOG, ...HEADLINES, ...QUESTIONS, ...QUOTES, ...ATTRIBUTION];
+const ATTRIBUTION_PATTERNS = [
+    /(.+?)\s+(?:said|stated|told reporters|reported|claimed|alleged|argued|warned|insisted|announced|noted|mentioned|according to)\s+that\s+(.+)/i,
+    /according to\s+(.+?),\s+(.+)/i
+];
+
+//extracts attribution claims
+function extractAttributedClaim(sentence) {
+    for (const pattern of ATTRIBUTION_PATTERNS) {
+        const match = sentence.match(pattern);
+        if (match) {
+            // Handle different patterns
+            if (pattern === ATTRIBUTION_PATTERNS[0]) {
+                // Pattern: "X said that Y"
+                return {
+                    fullSentence: sentence,
+                    speaker: match[1].trim(),
+                    action: match[2] ? match[0].match(/\bsaid|stated|claimed|alleged|reported|told reporters\b/i)[0] : "",
+                    claim: match[2].trim()
+                };
+            } else if (pattern === ATTRIBUTION_PATTERNS[1]) {
+                // Pattern: "According to X, Y"
+                return {
+                    fullSentence: sentence,
+                    speaker: match[1].trim(),
+                    action: "according to",
+                    claim: match[2].trim()
+                };
+            }
+        }
+    }
+
+    // No attribution detected → return the sentence itself as claim
+    return {
+        fullSentence: sentence,
+        speaker: null,
+        action: null,
+        claim: sentence.trim()
+    };
+}
+
+const ALL_HARD_REJECT = [...NOISE, ...LIVE_BLOG, ...HEADLINES, ...QUESTIONS, ...QUOTES,];
 
 function isClaim(sentence) {
     const raw = sentence.trim();
-    const s = raw.toLowerCase();
+
+    // --- STEP 0: Extract embedded claim if attribution exists ---
+    let claimText = raw;
+    const extracted = extractAttributedClaim(raw);
+    if (extracted && extracted.claim) {
+        claimText = extracted.claim;
+    }
+
+    const s = claimText.toLowerCase();
 
     // ---- BASIC FILTERS ----
     if (s.length < 25) return false;
@@ -716,44 +742,33 @@ function isClaim(sentence) {
     // Reject rhetorical or non-assertive forms
     if (/[?!]$/.test(s)) return false;
 
-    // Reject if starts with or contains opinion markers
     if (PURE_OPINION.some(r => r.test(s))) return false;
-
     if (NARRATIVE_STRUCTURE.some(r => r.test(s))) return false;
-
     if (PERSONAL_STORY.some(r => r.test(s))) return false;
-
     if (EMOTIONAL.some(r => r.test(s))) return false;
-
-    // Reject if contains subjective adjectives
     if (SUBJECTIVE.some(r => r.test(s))) return false;
-
-    if (isQuoted(sentence)) return false;
-
-    if (isPronounHeavy(sentence)) return false;
-
-    // Reject soft, non-verifiable observations
+    if (isQuoted(claimText)) return false;
+    if (isPronounHeavy(claimText)) return false;
     if (SOFT_OBSERVATION.some(r => r.test(s))) return false;
-
-    // Reject speech/attribution (he said / they claimed)
-    if (ATTRIBUTION_HARD.some(r => r.test(s))) return false;
+    if (DENIALS.some(r => r.test(s))) return false;
 
     // Reject news noise / timestamps / metadata
     if (ALL_HARD_REJECT.some(r => r.test(s))) return false;
 
-    // If sentence contains speculation or hedging → NOT a claim
+    // Reject speculation or hedging
     if (OPINION.some(r => r.test(s))) return false;
 
     // ---- MUST have factual verb ----
     if (!FACTUAL.some(r => r.test(s))) return false;
 
     // ---- MUST reference something (entity or number) ----
-    const hasEntity = /\b[A-Z][A-Za-z’']{2,}\b/.test(raw);
-    const hasNumber = /\d+/.test(raw);
+    const hasEntity = /\b[A-Z][A-Za-z’']{2,}\b/.test(claimText);
+    const hasNumber = /\d+/.test(claimText);
     if (!hasEntity && !hasNumber) return false;
 
     return true;
 }
+
 
 function scoreClaim(sentence) {
     const s = sentence.trim();
@@ -767,7 +782,7 @@ function scoreClaim(sentence) {
     // HARD REJECTS → heavy penalty
     // ---------------------------
     if ([...NOISE, ...LIVE_BLOG, ...HEADLINES, ...QUESTIONS].some(p => p.test(s))) score -= 3;
-    if ([...QUOTES, ...ATTRIBUTION].some(p => p.test(s))) score -= 3;
+    if ([...QUOTES,].some(p => p.test(s))) score -= 3;
 
     // ---------------------------
     // OPINION REJECTS → mild penalty
@@ -926,7 +941,6 @@ export function extractClaimsFromText(text) {
             if (!isClaim(trimmed)) return null;
 
             return {
-                // ⭐ store both versions here
                 originalClaim: originalSentence,
                 resolvedClaim: resolvedSentence,
 
