@@ -6,77 +6,75 @@ import { JSDOM, VirtualConsole } from "jsdom";
 import Claim from "../models/claimsModel.js";
 import VerifiedClaim from "../models/verifiedClaimModel.js";
 
-puppeteer.use(StealthPlugin());
+// puppeteer.use(StealthPlugin());
 
-// Browser (reusable)
-let browser = null;
+// let browser = null;
 
-async function getBrowser() {
-    if (!browser) {
-        browser = await puppeteer.launch({
-            headless: true,
-            args: [
-                "--no-sandbox",
-                "--disable-setuid-sandbox",
-                "--disable-dev-shm-usage",
-                "--disable-gpu",
-                "--window-size=1920,1080"
-            ],
-            defaultViewport: {
-                width: 1920,
-                height: 1080
-            }
-        });
-    }
-    return browser;
-}
+// async function getBrowser() {
+//     if (!browser) {
+//         browser = await puppeteer.launch({
+//             headless: true,
+//             args: [
+//                 "--no-sandbox",
+//                 "--disable-setuid-sandbox",
+//                 "--disable-dev-shm-usage",
+//                 "--disable-gpu",
+//                 "--window-size=1920,1080"
+//             ],
+//             defaultViewport: {
+//                 width: 1920,
+//                 height: 1080
+//             }
+//         });
+//     }
+//     return browser;
+// }
 
-// SCRAPER
+// // SCRAPER
+// export const extractPageData = async (url) => {
+//     const browser = await getBrowser();
+//     const page = await browser.newPage();
 
-export const extractPageData = async (url) => {
-    const browser = await getBrowser();
-    const page = await browser.newPage();
+//     try {
+//         await page.setUserAgent(
+//             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
+//         );
 
-    try {
-        await page.setUserAgent(
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
-        );
+//         await page.setRequestInterception(true);
+//         page.on("request", (req) => {
+//             const type = req.resourceType();
+//             if (type === "document") req.continue();
+//             else req.abort(); // skip images, styles, fonts
+//         });
 
-        await page.setRequestInterception(true);
-        page.on("request", (req) => {
-            const type = req.resourceType();
-            if (type === "document") req.continue();
-            else req.abort(); // skip images, styles, fonts
-        });
+//         await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
+//         let html = await page.content();
 
-        await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
-        let html = await page.content();
+//         // --- PRE-CLEAN HTML ---
+//         // Remove scripts, styles, headers, footers, nav
+//         html = html.replace(/<script[\s\S]*?<\/script>/gi, "");
+//         html = html.replace(/<style[\s\S]*?<\/style>/gi, "");
+//         html = html.replace(/<\/?(header|footer|nav|aside)[^>]*>/gi, "");
+//         html = html.replace(/<footer[\s\S]*?<\/footer>/gi, "");
+//         html = html.replace(/<nav[\s\S]*?<\/nav>/gi, "");
+//         html = html.replace(/<aside[\s\S]*?<\/aside>/gi, ""); // optional
 
-        // --- PRE-CLEAN HTML ---
-        // Remove scripts, styles, headers, footers, nav
-        html = html.replace(/<script[\s\S]*?<\/script>/gi, "");
-        html = html.replace(/<style[\s\S]*?<\/style>/gi, "");
-        html = html.replace(/<\/?(header|footer|nav|aside)[^>]*>/gi, "");
-        html = html.replace(/<footer[\s\S]*?<\/footer>/gi, "");
-        html = html.replace(/<nav[\s\S]*?<\/nav>/gi, "");
-        html = html.replace(/<aside[\s\S]*?<\/aside>/gi, ""); // optional
+//         // --- CREATE DOM ---
+//         const doc = new JSDOM(html, { url });
 
-        // --- CREATE DOM ---
-        const doc = new JSDOM(html, { url });
+//         // --- RUN READABILITY ---
+//         const reader = new Readability(doc.window.document);
+//         const article = reader.parse();
 
-        // --- RUN READABILITY ---
-        const reader = new Readability(doc.window.document);
-        const article = reader.parse();
+//         return article?.textContent || "";
 
-        return article?.textContent || "";
-
-    } catch (err) {
-        console.error("Scrape Error:", err.message);
-        return "";
-    } finally {
-        if (page && !page.isClosed()) await page.close();
-    }
-};
+//     } catch (err) {
+//         console.error("Scrape Error:", err.message);
+//         return "";
+//     } finally {
+//         if (page && !page.isClosed()) await page.close();
+//     }
+// };
 
 function resolvePronouns(sentences) {
     const malePronouns = ["he", "him"];
@@ -236,7 +234,7 @@ function resolvePronouns(sentences) {
 
     //name extractor
     function extractNames(sentence) {
-        // Match 1–3 capitalized words (e.g. Aishat, James Duggan)
+        // Match 1–3 capitalized words  
         let matches = sentence.match(/\b([A-Z][a-z]+)(?:\s+[A-Z][a-z]+){0,2}\b/g) || [];
 
         return matches.filter(name => {
@@ -301,39 +299,36 @@ function resolvePronouns(sentences) {
                 lastName,
                 type: detectEntityType(fullName, s),
                 gender,
-                index: idx
+                index: idx,
+                plural: /\bpolice|team|people|children|men|women|ministers|pundits|group|groups|officers|soldiers|members|officials|witnesses|students|researchers|scientists|athletes|employees|workers|authors|journalists|leaders|citizens|protesters|delegates|participants|colonels|generals|captains|committee|committees|board|boards|students|voters|fans|supporters|parties|councils|delegations|teams|forces|platoons|brigades|troops|units|staff|faculty|passengers|residents|inhabitants|neighbors|locals|activists|lawmakers|politicians|judges|attorneys|advocates|officials|representatives|members\b/i.test(s)
             });
         }
 
         // Replace pronouns with best entity
-        s = s.replace(/\b(he|him|she|her|they|them)\b/gi, (match, offset) => {
+
+        s = s.replace(/\b(he|him|she|her|they|them)\b/gi, (match) => {
             const entity = getBestEntityForPronoun(match);
             if (!entity) return match;
 
             const lower = match.toLowerCase();
 
-            // Look ahead to detect "her + noun"
-            const rest = s.slice(offset + match.length).trim();
-            const nextWord = rest.split(/\s+/)[0];
+            // If entity is plural or collective, keep as 'they/them'
+            if (entity.plural) return match;
 
-            const isPossessive =
-                (lower === "her" || lower === "his" || lower === "their") &&
-                /^[a-z]+$/i.test(nextWord); // next word is a noun-ish token
-
-            if (isPossessive) {
-                return entity.name + "'s";
+            // Otherwise human replacement
+            if ((malePronouns.includes(lower) && entity.gender === "male") ||
+                (femalePronouns.includes(lower) && entity.gender === "female") ||
+                (neutralPronouns.includes(lower))) {
+                return entity.name;
             }
 
-            // Otherwise normal replacement
-            const useLastName = s.includes(entity.lastName);
-            return useLastName ? entity.lastName : entity.name;
+            return match;
         });
 
         return s;
     });
 }
 
-// Quotes / speech / commentary
 const QUOTES = [
     /^["“”]/,           // starts with quote
     /["“”]$/,           // ends with quote
@@ -341,7 +336,6 @@ const QUOTES = [
     /^[^"]*["“][^"]*["”]/ // contains full quote block
 ];
 
-// Live blog & intros
 const LIVE_BLOG = [
     /^\w+,\s*\d{1,2}\s+\w+\s+\d{4}/i,       // date intros
     /^it[’']s\s+\w+/i,                      // It's Friday...
@@ -349,7 +343,6 @@ const LIVE_BLOG = [
     /^live:/i
 ];
 
-// Questions / rhetorical / analysis framing
 const QUESTIONS = [
     /\?$/,                                  // ends in ?
     /^why\b/i,
@@ -393,7 +386,6 @@ const SUBJECTIVE = [
     /\bcontroversial\b/i, /\bdisappointing\b/i
 ];
 
-// Noise / metadata / captions
 const NOISE = [
     /©/i, /getty images/i, /reuters/i,
     /bbc news/i, /image caption/i,
@@ -407,10 +399,12 @@ const NOISE = [
     /advertisement/i,
     /sponsored/i,
     /trending/i,
-    /breaking news/i
+    /breaking news/i,
+    /facebook/i,
+    /instagram/i,
+    /social media/i,
 ];
 
-// Headlines (no punctuation)
 const HEADLINES = [
     /^[A-Z][A-Za-z\s]+$/,                   // Title-like
     /^[A-Z][a-z]+\s[A-Z][a-z]+$/            // Two-word title
@@ -609,8 +603,6 @@ function isQuoted(sentence) {
     return false;
 }
 
-// REQUIRED FACTUAL SIGNAL
-
 const FACTUAL = [
     /\b(is|are|was|were|has|have|had)\b/i,
     /\b(killed|injured|captured|approved|introduced|launched)\b/i,
@@ -631,17 +623,12 @@ function mergedRelatedSentences(sentences) {
         return /^(both|these|those|they|it|this|that|which|the region|the regions|the area|the areas|he|she|the secretary|the minister|the group|the company)\b/i.test(s);
     }
 
-    // NEW: detect start of a new headline/topic
     function isTopicShift(prev, curr) {
         if (!prev) return false;
-
-        // If previous ends normally but current starts with a capital word (headline)
         if (/^[A-Z][a-z]+/.test(curr) && /[a-z]$/.test(prev)) return true;
 
-        // Very long sentence followed by another long one → likely different topic
         if (prev.split(" ").length > 15 && curr.split(" ").length > 15) return true;
 
-        // Headlines often have no period and multiple capital chunks
         if (/[A-Z][a-z]+ [A-Z][a-z]+/.test(curr)) return true;
 
         return false;
@@ -651,30 +638,25 @@ function mergedRelatedSentences(sentences) {
         const trimmed = s.trim();
         if (!trimmed) continue;
 
-        // Skip ultra-short noise
         if (trimmed.split(/\s+/).length < 3) continue;
 
         if (buf) {
-            // NEW: If topic shift → finalize immediately
             if (isTopicShift(buf, trimmed)) {
                 out.push(buf);
                 buf = trimmed;
                 continue;
             }
 
-            // Normal merge rules
             if (isShort(trimmed) || continuesContext(trimmed)) {
                 buf += " " + trimmed;
                 continue;
             }
 
-            // Finalize and start new
             out.push(buf);
             buf = trimmed;
             continue;
         }
 
-        // No buffer yet → just start
         buf = trimmed;
     }
 
@@ -687,19 +669,18 @@ const ATTRIBUTION_PATTERNS = [
     /according to\s+(.+?),\s+(.+)/i
 ];
 
-//extracts attribution claims
 function extractAttributedClaim(sentence) {
     for (const pattern of ATTRIBUTION_PATTERNS) {
         const match = sentence.match(pattern);
         if (match) {
             // Handle different patterns
             if (pattern === ATTRIBUTION_PATTERNS[0]) {
-                // Pattern: "X said that Y"
+                const actionMatch = match[0].match(/\bsaid|stated|claimed|alleged|reported|told reporters\b/i);
                 return {
                     fullSentence: sentence,
                     speaker: match[1].trim(),
-                    action: match[2] ? match[0].match(/\bsaid|stated|claimed|alleged|reported|told reporters\b/i)[0] : "",
-                    claim: match[2].trim()
+                    action: actionMatch ? actionMatch[0] : "",
+                    claim: match[2] ? match[2].trim() : ""
                 };
             } else if (pattern === ATTRIBUTION_PATTERNS[1]) {
                 // Pattern: "According to X, Y"
@@ -722,12 +703,9 @@ function extractAttributedClaim(sentence) {
     };
 }
 
-const ALL_HARD_REJECT = [...NOISE, ...LIVE_BLOG, ...HEADLINES, ...QUESTIONS, ...QUOTES,];
-
 function isClaim(sentence) {
     const raw = sentence.trim();
 
-    // --- STEP 0: Extract embedded claim if attribution exists ---
     let claimText = raw;
     const extracted = extractAttributedClaim(raw);
     if (extracted && extracted.claim) {
@@ -736,7 +714,6 @@ function isClaim(sentence) {
 
     const s = claimText.toLowerCase();
 
-    // ---- BASIC FILTERS ----
     if (s.length < 25) return false;
     if (!/[A-Za-z]/.test(s)) return false;
 
@@ -752,17 +729,13 @@ function isClaim(sentence) {
     if (isPronounHeavy(claimText)) return false;
     if (SOFT_OBSERVATION.some(r => r.test(s))) return false;
     if (DENIALS.some(r => r.test(s))) return false;
-
-    // Reject news noise / timestamps / metadata
-    if (ALL_HARD_REJECT.some(r => r.test(s))) return false;
-
-    // Reject speculation or hedging
+    if (NOISE.some(r => r.test(s))) return false;
+    if (LIVE_BLOG.some(r => r.test(s))) return false;
+    if (HEADLINES.some(r => r.test(s))) return false;
+    if (QUOTES.some(r => r.test(s))) return false;
+    if (QUESTIONS.some(r => r.test(s))) return false;
     if (OPINION.some(r => r.test(s))) return false;
-
-    // ---- MUST have factual verb ----
     if (!FACTUAL.some(r => r.test(s))) return false;
-
-    // ---- MUST reference something (entity or number) ----
     const hasEntity = /\b[A-Z][A-Za-z’']{2,}\b/.test(claimText);
     const hasNumber = /\d+/.test(claimText);
     if (!hasEntity && !hasNumber) return false;
@@ -770,43 +743,27 @@ function isClaim(sentence) {
     return true;
 }
 
-
 function scoreClaim(sentence) {
     const s = sentence.trim();
     const lower = s.toLowerCase();
 
-    if (s.length < 20) return 0; // very short → low score
+    if (s.length < 20) return 0;
 
-    let score = 5; // base score
+    let score = 5;
 
-    // ---------------------------
-    // HARD REJECTS → heavy penalty
-    // ---------------------------
     if ([...NOISE, ...LIVE_BLOG, ...HEADLINES, ...QUESTIONS].some(p => p.test(s))) score -= 3;
     if ([...QUOTES,].some(p => p.test(s))) score -= 3;
 
-    // ---------------------------
-    // OPINION REJECTS → mild penalty
-    // ---------------------------
     if (OPINION.some(p => p.test(lower))) score -= 2;
 
-    // ---------------------------
-    // FACTUAL SIGNALS → boost
-    // ---------------------------
     const factMatches = FACTUAL.filter(p => p.test(lower)).length;
-    score += factMatches; // +1 per factual signal matched
+    score += factMatches;
 
-    // ---------------------------
-    // Entity / number check → boost
-    // ---------------------------
     const hasEntity = /[A-Z][a-z]{3,}/.test(s);
     const hasNumber = /\d/.test(s);
     if (hasEntity) score += 1;
     if (hasNumber) score += 1;
 
-    // ---------------------------
-    // Clamp score 0–10
-    // ---------------------------
     if (score > 10) score = 10;
     if (score < 0) score = 0;
 
@@ -858,51 +815,63 @@ function removeCategoryPrefixes(text) {
     return text;
 }
 
+export function selectTopClaims(claims, max = 12) {
+    if (!Array.isArray(claims)) return [];
+
+    return claims
+        .sort((a, b) => {
+            if (b.score !== a.score) return b.score - a.score;
+
+            const lenA = a.resolvedClaim?.length || 0;
+            const lenB = b.resolvedClaim?.length || 0;
+            if (lenB !== lenA) return lenB - lenA;
+
+            const aChanged = a.originalClaim !== a.resolvedClaim;
+            const bChanged = b.originalClaim !== b.resolvedClaim;
+            if (aChanged !== bChanged) return bChanged - aChanged;
+
+            return 0;
+        })
+        .slice(0, max);
+}
+
 export function extractClaimsFromText(text) {
     if (!text) return [];
 
-    // Normalize whitespace
     text = text.replace(/\s+/g, " ").trim();
 
     const sentences = [];
     let buffer = "";
     let parenDepth = 0;
-    let insideQuote = false; // Track quote state
+    let insideQuote = false;
 
     const ABBREVIATIONS_LOWER = ABBREVIATIONS.map(a => a.toLowerCase());
 
-    // Sentence splitting with quote awareness
     for (let i = 0; i < text.length; i++) {
         const char = text[i];
         buffer += char;
 
-        // Track parentheses depth
         if (char === "(") parenDepth++;
         if (char === ")") parenDepth = Math.max(0, parenDepth - 1);
 
-        // Track quote state
         if (char === '"' || char === '“' || char === '”') {
             insideQuote = !insideQuote;
         }
 
-        // Only consider ., !, ? as sentence boundary if not inside quotes
         if ((char === "." || char === "!" || char === "?") && parenDepth === 0 && !insideQuote) {
-            // Skip ellipsis "..." or ".."
+
             if (text[i + 1] === "." || text[i - 1] === ".") continue;
 
-            // Skip decimal numbers
             const prevChar = text[i - 1] || "";
             const nextChar = text[i + 1] || "";
             if (/\d/.test(prevChar) && /\d/.test(nextChar)) continue;
 
-            // Skip abbreviations
             const beforeDot = buffer.slice(0, -1).trim();
             const tokens = beforeDot.split(/\s+/);
             const lastToken = tokens.length ? tokens[tokens.length - 1] : "";
             const lastTokenLower = (lastToken + ".").toLowerCase();
             if (ABBREVIATIONS_LOWER.includes(lastTokenLower)) continue;
 
-            // Split sentence
             sentences.push(buffer.trim());
             buffer = "";
         }
@@ -910,27 +879,22 @@ export function extractClaimsFromText(text) {
 
     if (buffer.trim()) sentences.push(buffer.trim());
 
-    // Remove noise prefixes
     const cleanedSentences = sentences.map(s =>
         removeCategoryPrefixes(removeTimePrefixes(s))
     );
 
-    // Merge dangling fragments
     const mergedSentences = mergedRelatedSentences(cleanedSentences);
 
-    //orignal sentences 
     const originalSentences = [...mergedSentences];
 
-    //Resolve pronuns
     const resolved = resolvePronouns(mergedSentences);
 
-    // Filter blocklisted sentences with resolved pronouns
-    const filtered = resolved.filter(sentence => !FILTER_BLOCKLIST.some(re => re.test(sentence)));
+    const filtered = resolved.filter(sentence =>
+        !FILTER_BLOCKLIST.some(re => re.test(sentence))
+    );
 
-    // ---- FILTER CLAIMS ----
-    return filtered
+    const claims = filtered
         .map((resolvedSentence, idx) => {
-
             const originalSentence = originalSentences[idx] || resolvedSentence;
 
             const trimmed = resolvedSentence.trim();
@@ -944,19 +908,19 @@ export function extractClaimsFromText(text) {
             return {
                 originalClaim: originalSentence,
                 resolvedClaim: resolvedSentence,
-
                 label: "claim",
                 score: scoreClaim(resolvedSentence)
             };
         })
         .filter(Boolean);
+
+    return selectTopClaims(claims, 12);
 }
 
 //save to mongo
 export const createClaimDocuments = async (claimsArray) => {
     if (!claimsArray.length) return [];
 
-    // Convert classification objects → DB objects
     const docs = claimsArray.map(c => ({
         originalClaim: c.originalClaim,
         resolvedClaim: c.resolvedClaim,
@@ -966,55 +930,6 @@ export const createClaimDocuments = async (claimsArray) => {
     }));
 
     return await Claim.insertMany(docs);
-};
-
-//old controller
-export const processNewsArticle = async (req, res) => {
-    try {
-        const { text, url } = req.body;
-
-        if (!text && !url) {
-            return res.status(400).json({ error: "Missing text or URL" });
-        }
-
-        let pageText = "";
-
-        // 1) Prefer frontend text (faster, avoids scraping)
-        if (text && text.trim().length > 0) {
-            pageText = text.trim();
-        }
-
-        // 2) If no text provided → scrape from URL
-        else if (url) {
-            pageText = await extractPageData(url);
-        }
-
-        // Still no text → cannot proceed
-        if (!pageText || pageText.trim().length < 30) {
-            return res.json({
-                message: "No article text extracted",
-                claims: []
-            });
-        }
-
-        // 3) Extract claims
-        const claims = extractClaimsFromText(pageText);
-
-        if (!claims.length) {
-            return res.json({ message: "No claims found on this page", claims: [] });
-        }
-
-        // 4) Save to DB
-        const saved = await createClaimDocuments(claims);
-
-        return res.json({
-            rawClaims: saved
-        });
-
-    } catch (error) {
-        console.error("Processing error:", error);
-        return res.status(500).json({ error: "Failed to process article" });
-    }
 };
 
 //main controller
@@ -1031,7 +946,6 @@ export const processChunks = async (req, res) => {
             .filter(c => c.length > 0)
             .join(" ");
 
-        // Not enough text to process
         if (!allText || allText.trim().length < 30) {
             return res.json({
                 message: "No valid text extracted from chunks",
@@ -1039,7 +953,6 @@ export const processChunks = async (req, res) => {
             });
         }
 
-        // Extract claims (same as processNewsArticle)
         const claims = extractClaimsFromText(allText);
 
         if (!claims.length) {
@@ -1049,7 +962,6 @@ export const processChunks = async (req, res) => {
             });
         }
 
-        // Save claims to Mongo
         const saved = await createClaimDocuments(claims);
 
         return res.json({
