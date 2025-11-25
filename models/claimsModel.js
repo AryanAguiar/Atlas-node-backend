@@ -6,8 +6,12 @@ const claimSchema = new mongoose.Schema({
     resolvedClaim: { type: String, required: true },
     label: { type: String },
     score: { type: Number },
-    confidence: { type: String },
     createdAt: { type: Date, default: Date.now }
 });
+
+claimSchema.index(
+    { originalClaim: 1, resolvedClaim: 1, label: 1, score: 1, },
+    { unique: true }
+);
 
 export default mongoose.model("Claim", claimSchema);

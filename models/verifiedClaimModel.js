@@ -37,4 +37,9 @@ const VerifiedClaimSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+VerifiedClaimSchema.index(
+  { claim: 1, verdict: 1, },
+  { unique: true }
+);
+
 export default mongoose.model("VerifiedClaim", VerifiedClaimSchema);

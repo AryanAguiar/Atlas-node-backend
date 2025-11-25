@@ -235,7 +235,8 @@ function resolvePronouns(sentences) {
     //name extractor
     function extractNames(sentence) {
         // Match 1–3 capitalized words  
-        let matches = sentence.match(/\b([A-Z][a-z]+)(?:\s+[A-Z][a-z]+){0,2}\b/g) || [];
+        // let matches = sentence.match(/\b([A-Z][a-z]+)(?:\s+[A-Z][a-z]+){0,2}\b/g) || [];
+        let matches = sentence.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2}\b/g) || [];
 
         return matches.filter(name => {
             if (blockedNames.has(name)) return false;
@@ -263,21 +264,52 @@ function resolvePronouns(sentences) {
     }
 
     // Choose the best entity for a pronoun
-    function getBestEntityForPronoun(pronoun) {
+    function getBestEntityForPronoun(pronoun, sentence = "") {
         const lower = pronoun.toLowerCase();
 
-        const possible = entities.filter(e => {
+        // Filter by gender/type
+        let possible = entities.filter(e => {
             if (malePronouns.includes(lower)) return e.gender === "male";
-            if (femalePronouns.includes(lower)) return e.gender === "female" || e.type === "pet";
+            if (femalePronouns.includes(lower)) return e.gender === "female";
             if (neutralPronouns.includes(lower)) return true;
             return false;
         });
 
+        // Ignore human entities if the pronoun is likely referring to non-human
+        if (lower === "they" || lower === "them") {
+            const prevWords = sentence.split(/\s+/).slice(0, 5).join(" ").toLowerCase();
+            if (
+                prevWords.includes("leukaemia") ||
+                prevWords.includes("cancer") ||
+                prevWords.includes("virus") ||
+                prevWords.includes("disease") ||
+                prevWords.includes("cells") ||
+                prevWords.includes("tumor") ||
+                prevWords.includes("infection") ||
+                prevWords.includes("bacteria") ||
+                prevWords.includes("plague") ||
+                prevWords.includes("committee") ||
+                prevWords.includes("team") ||
+                prevWords.includes("organization") ||
+                prevWords.includes("group") ||
+                prevWords.includes("company") ||
+                prevWords.includes("government") ||
+                prevWords.includes("army") ||
+                prevWords.includes("police") ||
+                prevWords.includes("population") ||
+                prevWords.includes("students") ||
+                prevWords.includes("researchers") ||
+                prevWords.includes("scientists")
+            ) {
+                possible = possible.filter(e => e.type !== "human");
+            }
+        }
+
         if (possible.length === 0) return null;
 
-        // Most recent appropriate entity
-        return possible[possible.length - 1];
+        return possible[possible.length - 1]; // most recent suitable entity
     }
+
 
     return sentences.map((sentence, idx) => {
         let s = sentence.trim();
@@ -305,17 +337,22 @@ function resolvePronouns(sentences) {
         }
 
         // Replace pronouns with best entity
-
-        s = s.replace(/\b(he|him|she|her|they|them)\b/gi, (match) => {
+        s = s.replace(/\b(he|him|she|her|they|them)\b/gi, (match, offset) => {
             const entity = getBestEntityForPronoun(match);
             if (!entity) return match;
 
             const lower = match.toLowerCase();
 
-            // If entity is plural or collective, keep as 'they/them'
-            if (entity.plural) return match;
+            // Check if pronoun is possessive (her/his)
+            const isPossessive = lower === "her" || lower === "his";
+            const nextToken = s.slice(offset + match.length).trim().split(/\s+/)[0] || "";
 
-            // Otherwise human replacement
+            if (isPossessive && nextToken) {
+                // Skip replacement in possessive context
+                return match;
+            }
+
+            // Replace only if it’s a standalone pronoun
             if ((malePronouns.includes(lower) && entity.gender === "male") ||
                 (femalePronouns.includes(lower) && entity.gender === "female") ||
                 (neutralPronouns.includes(lower))) {
@@ -324,6 +361,7 @@ function resolvePronouns(sentences) {
 
             return match;
         });
+
 
         return s;
     });
@@ -929,8 +967,18 @@ export const createClaimDocuments = async (claimsArray) => {
         createdAt: new Date()
     }));
 
-    return await Claim.insertMany(docs);
+    try {
+        return await Claim.insertMany(docs, { ordered: false });
+    } catch (err) {
+        if (err.code === 11000) {
+            console.log("Some claims already exist, skipping duplicates");
+            return [];
+        } else {
+            throw err;
+        }
+    }
 };
+
 
 //main controller
 export const processChunks = async (req, res) => {
@@ -965,7 +1013,8 @@ export const processChunks = async (req, res) => {
         const saved = await createClaimDocuments(claims);
 
         return res.json({
-            rawClaims: saved
+            rawClaims: saved,
+            allClaims: claims
         });
 
     } catch (error) {
