@@ -9,7 +9,6 @@ const SourceSchema = new mongoose.Schema({
 const VerifiedClaimSchema = new mongoose.Schema(
   {
     claim: { type: String, required: true, trim: true },
-    // user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     verdict: {
       type: String,
       enum: [
@@ -26,10 +25,9 @@ const VerifiedClaimSchema = new mongoose.Schema(
 
     score: { type: Number, min: 0, max: 100, default: 0 },
 
-    total_results: { type: Number, default: 0 },
-    trusted_results: { type: Number, default: 0 },
-
     explanation_snippet: { type: String, default: null },
+
+    urls: [{ type: String, trim: true }],
 
     explanation: { type: String, default: null },
     sources: [SourceSchema],

@@ -1,16 +1,17 @@
 import mongoose from "mongoose";
 
 const claimSchema = new mongoose.Schema({
-    // user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     originalClaim: { type: String, required: true },
     resolvedClaim: { type: String, required: true },
     label: { type: String },
     score: { type: Number },
+    verified: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now }
 });
 
+// Only enforce unique original + resolved
 claimSchema.index(
-    { originalClaim: 1, resolvedClaim: 1, label: 1, score: 1, },
+    { originalClaim: 1, resolvedClaim: 1 },
     { unique: true }
 );
 

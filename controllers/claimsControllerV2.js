@@ -96,7 +96,10 @@ function resolvePronouns(sentences) {
         "China", "Japan", "Korea", "Russia", "Ukraine", "USA", "Canada", "Chechen",
         "Mexico", "Brazil", "Argentina", "Chile", "Peru", "Armenia",
         "France", "Germany", "Spain", "Italy", "UK", "Ireland",
-        "Australia", "New", "Zealand", "South", "Africa", "Egypt",
+        "Australia", "New", "Zealand", "South", "Africa", "Egypt", "Israel",
+        "Turkey", "Iran", "Iraq", "Syria", "Lebanon", "Jordan",
+        "Afghanistan", "Kazakhstan", "Uzbekistan", "Turkmenistan", "Tajikistan",
+        "Thailand", "Vietnam", "Philippines", "Malaysia", "Indonesia", "Singapore",
         "Saudi", "Arabia", "UAE", "Dubai", "Qatar", "Kuwait", "Oman",
 
         // ===== NATIONALITIES / ADJECTIVES =====
@@ -116,7 +119,7 @@ function resolvePronouns(sentences) {
         "Qatari", "Romanian", "Russian", "Rwandan", "Salvadoran", "Samoan", "Saudi", "Scottish", "Senegalese",
         "Serbian", "Singaporean", "Slovak", "Slovenian", "Somalian", "South African", "Spanish", "Sri Lankan", "Sudanese",
         "Surinamese", "Swazi", "Swedish", "Swiss", "Syrian", "Tajik", "Tanzanian", "Thai", "Togolese", "Tongan", "Trinidadian",
-        "Tunisian", "Turkish", "Turkmen", "Ugandan", "Ukrainian", "Uruguayan", "Uzbek", "Venezuelan", "Vietnamese", "Welsh", "Yemeni", "Zambian", "Zimbabwean", "Chechen", "European",
+        "Tunisian", "Turkish", "Turkmen", "Ugandan", "Ukrainian", "Uruguayan", "Uzbek", "Venezuelan", "Vietnamese", "Welsh", "Yemeni", "Zambian", "Zimbabwean", "Chechen", "European", "Isrieli",
 
         // ===== INDIAN STATES =====
         "Maharashtra", "Goa", "Gujarat", "Rajasthan", "Punjab",
@@ -264,10 +267,10 @@ function resolvePronouns(sentences) {
     }
 
     // Choose the best entity for a pronoun
-    function getBestEntityForPronoun(pronoun, sentence = "") {
+    function getBestEntityForPronoun(pronoun, sentence = "", sentenceIdx = 0) {
         const lower = pronoun.toLowerCase();
 
-        // Filter by gender/type
+        // Filter entities by gender/type
         let possible = entities.filter(e => {
             if (malePronouns.includes(lower)) return e.gender === "male";
             if (femalePronouns.includes(lower)) return e.gender === "female";
@@ -275,7 +278,7 @@ function resolvePronouns(sentences) {
             return false;
         });
 
-        // Ignore human entities if the pronoun is likely referring to non-human
+        // Ignore human entities if pronoun is likely referring to non-human
         if (lower === "they" || lower === "them") {
             const prevWords = sentence.split(/\s+/).slice(0, 5).join(" ").toLowerCase();
             if (
@@ -307,9 +310,28 @@ function resolvePronouns(sentences) {
 
         if (possible.length === 0) return null;
 
-        return possible[possible.length - 1]; // most recent suitable entity
-    }
+        // Compute a simple score for each candidate
+        possible.forEach(e => {
+            e.score = 0;
 
+            // Closer sentence index = higher score
+            e.score += 1 / (1 + Math.abs(sentenceIdx - e.index));
+
+            // Human entities get a boost
+            if (e.type === "human") e.score += 0.5;
+
+            // Plural entities get a boost for 'they/them'
+            if ((lower === "they" || lower === "them") && e.plural) e.score += 0.5;
+
+            // Recent mentions get a small bonus
+            if (e.index === sentenceIdx - 1) e.score += 0.3;
+        });
+
+        // Sort by score descending
+        possible.sort((a, b) => b.score - a.score);
+
+        return possible[0]; // entity with highest score
+    }
 
     return sentences.map((sentence, idx) => {
         let s = sentence.trim();
