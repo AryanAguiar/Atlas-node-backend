@@ -675,6 +675,10 @@ function mergedRelatedSentences(sentences) {
     const out = [];
     let buf = "";
 
+    function isTiny(s) {
+        return s.trim().split(/\s+/).length < 4; // <—— NEW RULE
+    }
+
     function isShort(s, words = 10) {
         return s.trim().split(/\s+/).length <= words;
     }
@@ -686,11 +690,8 @@ function mergedRelatedSentences(sentences) {
     function isTopicShift(prev, curr) {
         if (!prev) return false;
         if (/^[A-Z][a-z]+/.test(curr) && /[a-z]$/.test(prev)) return true;
-
         if (prev.split(" ").length > 15 && curr.split(" ").length > 15) return true;
-
         if (/[A-Z][a-z]+ [A-Z][a-z]+/.test(curr)) return true;
-
         return false;
     }
 
@@ -698,7 +699,15 @@ function mergedRelatedSentences(sentences) {
         const trimmed = s.trim();
         if (!trimmed) continue;
 
-        if (trimmed.split(/\s+/).length < 3) continue;
+        // NEW: tiny things should stand alone, not merge with anything.
+        if (isTiny(trimmed)) {
+            if (buf) {
+                out.push(buf);
+                buf = "";
+            }
+            out.push(trimmed);
+            continue;
+        }
 
         if (buf) {
             if (isTopicShift(buf, trimmed)) {
@@ -723,6 +732,7 @@ function mergedRelatedSentences(sentences) {
     if (buf) out.push(buf);
     return out;
 }
+
 
 const ATTRIBUTION_PATTERNS = [
     /(.+?)\s+(?:said|stated|told reporters|reported|claimed|alleged|argued|warned|insisted|announced|noted|mentioned|according to)\s+that\s+(.+)/i,

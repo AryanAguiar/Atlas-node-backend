@@ -6,7 +6,7 @@ const SourceSchema = new mongoose.Schema({
   snippet: { type: String, trim: true },
 });
 
-const VerifiedClaimSchema = new mongoose.Schema(
+const verifiedClaimSchema = new mongoose.Schema(
   {
     claim: { type: String, required: true, trim: true },
     verdict: {
@@ -35,9 +35,9 @@ const VerifiedClaimSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-VerifiedClaimSchema.index(
+verifiedClaimSchema.index(
   { claim: 1, verdict: 1, },
   { unique: true }
 );
 
-export default mongoose.model("VerifiedClaim", VerifiedClaimSchema);
+export default mongoose.model("VerifiedClaim", verifiedClaimSchema);
