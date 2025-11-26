@@ -4,7 +4,7 @@ const claimSchema = new mongoose.Schema({
     originalClaim: { type: String, required: true },
     resolvedClaim: { type: String, required: true },
     label: { type: String },
-    score: { type: Number },
+    claim_score: { type: Number },
     verified: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now }
 });
