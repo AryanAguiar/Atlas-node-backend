@@ -392,10 +392,17 @@ function resolvePronouns(sentences) {
             }
         }
 
+        // Track entities used in this sentence to avoid repetition
+        const usedEntitiesInSentence = new Set();
+
         // Replace pronouns with best entity
         s = s.replace(/\b(he|him|she|her|they|them)\b/gi, (match, offset) => {
             const entity = getBestEntityForPronoun(match, s, idx);
             if (!entity) return match;
+
+            // NEW: If we already used this entity name in this sentence, don't replace again.
+            // This prevents "National Guard... National Guard..."
+            if (usedEntitiesInSentence.has(entity.name)) return match;
 
             const lower = match.toLowerCase();
 
@@ -412,6 +419,8 @@ function resolvePronouns(sentences) {
             if ((malePronouns.includes(lower) && (entity.gender === "male" || !entity.gender)) ||
                 (femalePronouns.includes(lower) && (entity.gender === "female" || !entity.gender)) ||
                 (neutralPronouns.includes(lower))) {
+
+                usedEntitiesInSentence.add(entity.name);
                 return entity.name;
             }
 
