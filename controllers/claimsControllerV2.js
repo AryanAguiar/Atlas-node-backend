@@ -230,36 +230,73 @@ function resolvePronouns(sentences) {
         "President", "Prime", "Minister", "Chancellor",
         "Leader", "Speaker", "Governor", "Mayor",
         "Senator", "MP", "MLA", "Representative",
+        // ===== COMMON STARTERS =====
+        "The", "A", "An", "In", "On", "At", "By", "For", "From", "With", "During", "After", "Before",
+        "But", "However", "Although", "While", "When", "If", "Unless", "Since", "Despite", "Given",
+        "To", "As", "It", "This", "That", "These", "Those", "There", "Here", "What", "Why", "How",
+        "And", "Or", "Nor", "So", "Yet", "Once", "Now", "Then", "Later", "Earlier", "Meanwhile",
+        "Today", "Yesterday", "Tomorrow", "Recently", "Currently", "Finally", "Eventually"
     ]);
 
     // Track all known entities
     let entities = [];
 
+    // Honorifics for gender/type detection
+    const maleHonorifics = ["Mr", "Sir", "King", "Prince", "Lord"];
+    const femaleHonorifics = ["Mrs", "Ms", "Miss", "Lady", "Queen", "Princess", "Dame"];
+    const humanHonorifics = [...maleHonorifics, ...femaleHonorifics, "Dr", "Prof", "Capt", "Gen", "Sen", "Rep", "Gov", "Pres", "Officer", "Detective"];
+
     //name extractor
     function extractNames(sentence) {
-        // Match 1–3 capitalized words  
-        // let matches = sentence.match(/\b([A-Z][a-z]+)(?:\s+[A-Z][a-z]+){0,2}\b/g) || [];
-        let matches = sentence.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2}\b/g) || [];
+        const nameRegex = /\b[A-Z][a-z]+(?:[-'][A-Z][a-z]+)?(?:\s+[A-Z][a-z]+(?:[-'][A-Z][a-z]+)?){0,2}\b/g;
+        let matches = [];
+        let match;
+        while ((match = nameRegex.exec(sentence)) !== null) {
+            matches.push({ name: match[0], index: match.index });
+        }
 
-        return matches.filter(name => {
+        return matches.filter(m => {
+            const name = m.name;
             if (blockedNames.has(name)) return false;
 
-            // Skip standalone capitalized "In", "On", etc.
+            const parts = name.split(/\s+/);
+            if (parts.some(p => blockedNames.has(p))) return false;
+
             if (/^(In|On|At|By|For|From|With|During)$/i.test(name)) return false;
+            if (/^(.*?)(ian|ese|ish|an|ic)$/i.test(name) && parts.length === 1) return false;
 
-            // Skip nationality/country adjectives like Armenian, Russian
-            if (/^(.*?)(ian|ese|ish|an|ic)$/i.test(name) && name.split(" ").length === 1)
-                return false;
-
-            const tokens = sentence.trim().split(/\s+/);
-            if (tokens[0] === name && name.split(" ").length === 1) return false;
+            // Start of sentence check
+            if (m.index === 0 && parts.length === 1) {
+                if (blockedNames.has(name)) return false;
+            }
 
             return true;
         });
     }
 
+    function detectGender(name, sentence, index) {
+        const preceedingText = sentence.substring(0, index).trim();
+        const words = preceedingText.split(/\s+/);
+        const lastWord = words[words.length - 1]?.replace(/\.$/, "");
+
+        if (maleHonorifics.includes(lastWord)) return "male";
+        if (femaleHonorifics.includes(lastWord)) return "female";
+
+        // Simple context checks
+        if (/\b(he|him|his)\b/i.test(sentence)) return "male";
+        if (/\b(she|her|hers)\b/i.test(sentence)) return "female";
+
+        return null;
+    }
+
     // Determine if entity is human or pet
-    function detectEntityType(name, sentence) {
+    function detectEntityType(name, sentence, index) {
+        const preceedingText = sentence.substring(0, index).trim();
+        const words = preceedingText.split(/\s+/);
+        const lastWord = words[words.length - 1]?.replace(/\.$/, "");
+
+        if (humanHonorifics.includes(lastWord)) return "human";
+
         if (petKeywords.some(k => sentence.toLowerCase().includes(k))) {
             return "pet";
         }
@@ -272,8 +309,8 @@ function resolvePronouns(sentences) {
 
         // Filter entities by gender/type
         let possible = entities.filter(e => {
-            if (malePronouns.includes(lower)) return e.gender === "male";
-            if (femalePronouns.includes(lower)) return e.gender === "female";
+            if (malePronouns.includes(lower)) return e.gender === "male" || !e.gender;
+            if (femalePronouns.includes(lower)) return e.gender === "female" || !e.gender;
             if (neutralPronouns.includes(lower)) return true;
             return false;
         });
@@ -281,29 +318,13 @@ function resolvePronouns(sentences) {
         // Ignore human entities if pronoun is likely referring to non-human
         if (lower === "they" || lower === "them") {
             const prevWords = sentence.split(/\s+/).slice(0, 5).join(" ").toLowerCase();
-            if (
-                prevWords.includes("leukaemia") ||
-                prevWords.includes("cancer") ||
-                prevWords.includes("virus") ||
-                prevWords.includes("disease") ||
-                prevWords.includes("cells") ||
-                prevWords.includes("tumor") ||
-                prevWords.includes("infection") ||
-                prevWords.includes("bacteria") ||
-                prevWords.includes("plague") ||
-                prevWords.includes("committee") ||
-                prevWords.includes("team") ||
-                prevWords.includes("organization") ||
-                prevWords.includes("group") ||
-                prevWords.includes("company") ||
-                prevWords.includes("government") ||
-                prevWords.includes("army") ||
-                prevWords.includes("police") ||
-                prevWords.includes("population") ||
-                prevWords.includes("students") ||
-                prevWords.includes("researchers") ||
-                prevWords.includes("scientists")
-            ) {
+            const nonHumanKeywords = [
+                "leukaemia", "cancer", "virus", "disease", "cells", "tumor", "infection", "bacteria", "plague",
+                "committee", "team", "organization", "group", "company", "government", "army", "police",
+                "population", "students", "researchers", "scientists"
+            ];
+
+            if (nonHumanKeywords.some(k => prevWords.includes(k))) {
                 possible = possible.filter(e => e.type !== "human");
             }
         }
@@ -315,16 +336,21 @@ function resolvePronouns(sentences) {
             e.score = 0;
 
             // Closer sentence index = higher score
-            e.score += 1 / (1 + Math.abs(sentenceIdx - e.index));
+            e.score += 10 / (1 + Math.abs(sentenceIdx - e.index));
 
             // Human entities get a boost
-            if (e.type === "human") e.score += 0.5;
+            if (e.type === "human") e.score += 1;
+
+            // Gender match bonus
+            if (malePronouns.includes(lower) && e.gender === "male") e.score += 2;
+            if (femalePronouns.includes(lower) && e.gender === "female") e.score += 2;
 
             // Plural entities get a boost for 'they/them'
-            if ((lower === "they" || lower === "them") && e.plural) e.score += 0.5;
+            if ((lower === "they" || lower === "them") && e.plural) e.score += 1;
 
             // Recent mentions get a small bonus
-            if (e.index === sentenceIdx - 1) e.score += 0.3;
+            if (e.index === sentenceIdx - 1) e.score += 1;
+            if (e.index === sentenceIdx) e.score += 2;
         });
 
         // Sort by score descending
@@ -340,27 +366,35 @@ function resolvePronouns(sentences) {
         const nameMatches = extractNames(s);
 
         // Register new entities
-        for (const fullName of nameMatches) {
+        for (const m of nameMatches) {
+            const fullName = m.name;
             const lastName = fullName.split(" ").slice(-1)[0];
 
-            // Detect gender from the sentence
-            let gender = null;
-            if (/\bhe\b|\bhim\b/i.test(s)) gender = "male";
-            if (/\bshe\b|\bher\b/i.test(s)) gender = "female";
+            // Detect gender/type
+            let gender = detectGender(fullName, s, m.index);
+            let type = detectEntityType(fullName, s, m.index);
 
-            entities.push({
-                name: fullName,
-                lastName,
-                type: detectEntityType(fullName, s),
-                gender,
-                index: idx,
-                plural: /\bpolice|team|people|children|men|women|ministers|pundits|group|groups|officers|soldiers|members|officials|witnesses|students|researchers|scientists|athletes|employees|workers|authors|journalists|leaders|citizens|protesters|delegates|participants|colonels|generals|captains|committee|committees|board|boards|students|voters|fans|supporters|parties|councils|delegations|teams|forces|platoons|brigades|troops|units|staff|faculty|passengers|residents|inhabitants|neighbors|locals|activists|lawmakers|politicians|judges|attorneys|advocates|officials|representatives|members\b/i.test(s)
-            });
+            // Deduplicate
+            let existing = entities.find(e => e.name === fullName || (e.lastName === lastName && e.lastName.length > 3));
+
+            if (existing) {
+                if (!existing.gender && gender) existing.gender = gender;
+                existing.index = idx;
+            } else {
+                entities.push({
+                    name: fullName,
+                    lastName,
+                    type,
+                    gender,
+                    index: idx,
+                    plural: /\b(police|team|people|children|men|women|group|groups|officers|soldiers|members|officials|witnesses|students|researchers|scientists)\b/i.test(s)
+                });
+            }
         }
 
         // Replace pronouns with best entity
         s = s.replace(/\b(he|him|she|her|they|them)\b/gi, (match, offset) => {
-            const entity = getBestEntityForPronoun(match);
+            const entity = getBestEntityForPronoun(match, s, idx);
             if (!entity) return match;
 
             const lower = match.toLowerCase();
@@ -375,8 +409,8 @@ function resolvePronouns(sentences) {
             }
 
             // Replace only if it’s a standalone pronoun
-            if ((malePronouns.includes(lower) && entity.gender === "male") ||
-                (femalePronouns.includes(lower) && entity.gender === "female") ||
+            if ((malePronouns.includes(lower) && (entity.gender === "male" || !entity.gender)) ||
+                (femalePronouns.includes(lower) && (entity.gender === "female" || !entity.gender)) ||
                 (neutralPronouns.includes(lower))) {
                 return entity.name;
             }
@@ -462,7 +496,80 @@ const NOISE = [
     /breaking news/i,
     /facebook/i,
     /instagram/i,
+    /facebook/i,
+    /instagram/i,
     /social media/i,
+];
+
+const NAV_NOISE = [
+    "Home", "News", "Sport", "Business", "Innovation", "Culture", "Arts", "Travel", "Earth", "Audio", "Video", "Live", "Weather", "Newsletters",
+    "Skip to content", "Menu", "Search", "Sign in", "Register", "Subscribe", "My Account", "Profile", "Settings", "Help", "Contact", "About",
+    "Terms", "Privacy", "Cookies", "Jobs", "Accessibility", "Sitemap", "Shop", "More", "Follow us", "Share", "Close", "Open", "Back", "Next",
+    "Previous", "First", "Last", "Page", "of", "in", "on", "at", "by", "for", "from", "with", "during", "after", "before"
+];
+
+const JUNK_PATTERNS = [
+    /^skip to content/i,
+    /^british broadcasting corporation/i,
+    /^bbc/i,
+    /^copyright/i,
+    /^all rights reserved/i,
+    /^follow us on/i,
+    /^click here/i,
+    /^read more/i,
+    /^see also/i,
+    /^watch:/i,
+    /^watch more:/i,
+    /^image source/i,
+    /^image caption/i,
+    /^\d{1,2}:\d{2}/, // timestamps like 12:30
+    /^\d+ (hours?|minutes?|seconds?) ago/i,
+
+    // --- NEW ONES BELOW ---
+    /^advertisement/i,
+    /^sponsored/i,
+    /^sponsored by/i,
+    /^from our partners/i,
+    /^newsletter/i,
+    /^breaking news/i,
+
+    // Category headers used on news sites
+    /^(world|politics|technology|sports|entertainment|business|health)$/i,
+
+    // Social media junk
+    /^share this/i,
+    /^follow/i,
+    /^share on/i,
+    /^tweet/i,
+    /^join our newsletter/i,
+
+    // Magazine/blog styles
+    /^editor’s note/i,
+    /^related stories/i,
+    /^related articles/i,
+    /^recommended/i,
+    /^most popular/i,
+    /^trending/i,
+    /^featured/i,
+
+    // Footer/date bylines
+    /^published/i,
+    /^updated/i,
+    /^last modified/i,
+
+    // Generic blog junk
+    /^comments/i,
+    /^leave a reply/i,
+    /^you may also like/i,
+    /^recent posts/i,
+    /^top stories/i,
+    /^back to top/i,
+
+    // Ads, disclaimers
+    /^disclaimer/i,
+    /^terms and conditions/i,
+    /^privacy policy/i,
+    /^cookie policy/i,
 ];
 
 const HEADLINES = [
@@ -953,21 +1060,45 @@ export function extractClaimsFromText(text) {
         removeCategoryPrefixes(removeTimePrefixes(s))
     );
 
-    const mergedSentences = mergedRelatedSentences(cleanedSentences);
+    // --- PRE-FILTERING NOISE ---
+    const preFiltered = cleanedSentences.filter(s => {
+        const trimmed = s.trim();
+        if (!trimmed) return false;
 
-    const originalSentences = [...mergedSentences];
+        // Check against junk patterns
+        if (JUNK_PATTERNS.some(p => p.test(trimmed))) return false;
 
-    const resolved = resolvePronouns(mergedSentences);
+        // Check if it's just a string of nav words
+        const words = trimmed.split(/\s+/);
+        const isAllNav = words.every(w =>
+            NAV_NOISE.includes(w) ||
+            NAV_NOISE.includes(w.replace(/[^\w]/g, "")) // handle punctuation
+        );
+        if (isAllNav) return false;
 
-    const filtered = resolved.filter(sentence =>
-        !FILTER_BLOCKLIST.some(re => re.test(sentence))
+        return true;
+    });
+
+    const mergedSentences = mergedRelatedSentences(preFiltered);
+
+    // const originalSentences = [...mergedSentences]; // No longer needed as separate array
+
+    const resolvedSentences = resolvePronouns(mergedSentences);
+
+    // Pair them up to maintain alignment
+    const paired = mergedSentences.map((original, idx) => ({
+        original,
+        resolved: resolvedSentences[idx]
+    }));
+
+    const filteredPairs = paired.filter(pair =>
+        !FILTER_BLOCKLIST.some(re => re.test(pair.resolved))
     );
 
-    const claims = filtered
-        .map((resolvedSentence, idx) => {
-            const originalSentence = originalSentences[idx] || resolvedSentence;
-
-            const trimmed = resolvedSentence.trim();
+    const claims = filteredPairs
+        .map(pair => {
+            const { original, resolved } = pair;
+            const trimmed = resolved.trim();
 
             if (trimmed.startsWith('"') && trimmed.endsWith('"')) return null;
             if (trimmed.startsWith('“') && trimmed.endsWith('”')) return null;
@@ -976,10 +1107,10 @@ export function extractClaimsFromText(text) {
             if (!isClaim(trimmed)) return null;
 
             return {
-                originalClaim: originalSentence,
-                resolvedClaim: resolvedSentence,
+                originalClaim: original,
+                resolvedClaim: resolved,
                 label: "claim",
-                score: scoreClaim(resolvedSentence)
+                score: scoreClaim(resolved)
             };
         })
         .filter(Boolean);
