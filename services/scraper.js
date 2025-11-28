@@ -4,7 +4,7 @@ import { Readability } from "@mozilla/readability";
 import { parseDocument } from "htmlparser2";
 import { DomUtils } from "htmlparser2";
 
-export async function scrapeArticle(url, retries = 2) {
+export async function scrapeArticle(url, retries = 0) {
     if (url.match(/\.(pdf|doc|docx|xlsx)$/i)) return "";
 
     const headers = {
@@ -12,10 +12,10 @@ export async function scrapeArticle(url, retries = 2) {
         "Accept-Language": "en-US,en;q=0.9"
     };
 
-    for (let attempt = 1; attempt <= retries; attempt++) {
+    for (let attempt = 1; attempt <= retries + 1; attempt++) {
         try {
             const res = await axios.get(url, {
-                timeout: 6000,
+                timeout: 2500,
                 maxRedirects: 5,
                 headers
             });
@@ -32,7 +32,7 @@ export async function scrapeArticle(url, retries = 2) {
 
             if (text.length < 100) continue;
 
-            return text.slice(0, 5000);
+            return text.slice(0, 2000);
 
         } catch {
             continue;
