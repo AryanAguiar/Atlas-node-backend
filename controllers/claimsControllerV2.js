@@ -5,6 +5,7 @@ import { Readability } from "@mozilla/readability";
 import { JSDOM, VirtualConsole } from "jsdom";
 import Claim from "../models/claimsModel.js";
 import VerifiedClaim from "../models/verifiedClaimModel.js";
+import { processUnverifiedClaims } from "../services/claimProcessingService.js";
 
 // puppeteer.use(StealthPlugin());
 
@@ -1183,6 +1184,14 @@ export const processChunks = async (req, res) => {
         }
 
         const saved = await createClaimDocuments(claims);
+
+        // --- INSTANT VERIFICATION TRIGGER ---
+        // Fire and forget: don't await this, let it run in background
+        if (saved && saved.length > 0) {
+            console.log("New claims saved, triggering instant verification...");
+            processUnverifiedClaims().catch(err => console.error("Instant verification error:", err));
+        }
+        // ------------------------------------
 
         return res.json({
             rawClaims: saved,

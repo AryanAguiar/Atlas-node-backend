@@ -6,6 +6,7 @@ import claimsRoutes from "./routes/claimsRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import cors from "cors";
 import { deleteOldClaimsJob } from "./cronJob.js";
+import searchRoutes from "./routes/searchRoutes.js";
 dotenv.config();
 
 const app = express();
@@ -25,6 +26,7 @@ mongoose
 app.use("/api/verifiedClaims", verifiedClaimRoutes);
 app.use("/api/claims", claimsRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/search", searchRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
