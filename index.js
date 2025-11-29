@@ -3,7 +3,6 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import verifiedClaimRoutes from "./routes/verifiedClaimRoutes.js";
 import claimsRoutes from "./routes/claimsRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
 import cors from "cors";
 import { deleteOldClaimsJob } from "./cronJob.js";
 import searchRoutes from "./routes/searchRoutes.js";
@@ -25,7 +24,6 @@ mongoose
 // Routes
 app.use("/api/verifiedClaims", verifiedClaimRoutes);
 app.use("/api/claims", claimsRoutes);
-app.use("/api/users", userRoutes);
 app.use("/api/search", searchRoutes);
 
 const PORT = process.env.PORT || 5000;
