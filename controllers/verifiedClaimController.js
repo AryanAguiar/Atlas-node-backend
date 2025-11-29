@@ -1,4 +1,30 @@
 import VerifiedClaim from "../models/verifiedClaimModel.js";
+import { verifySingleClaim } from "../services/callPythonLLM.js";
+
+export const verifyAndSaveClaim = async (req, res) => {
+    try {
+        const { claim } = req.body;
+        if (!claim) {
+            return res.status(400).json({ error: "Claim text is required" });
+        }
+
+        // Call Python LLM
+        const verifiedData = await verifySingleClaim(claim);
+
+        if (!verifiedData) {
+            return res.status(500).json({ error: "Failed to verify claim with LLM" });
+        }
+
+        // Save to MongoDB
+        // Check if exists first to avoid duplicates if needed, or just create
+        const newClaim = await VerifiedClaim.create(verifiedData);
+
+        return res.status(201).json(newClaim);
+    } catch (err) {
+        console.error("Error verifying and saving claim:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+};
 
 export const createVerifiedClaim = async (req, res) => {
     try {
@@ -17,7 +43,7 @@ export const createVerifiedClaim = async (req, res) => {
         }
 
         // Check duplicates again (extra safety layer)
-        const exists = await VerifiedClaim.findOne({ claim, verdict  });
+        const exists = await VerifiedClaim.findOne({ claim, verdict });
         if (exists) {
             return res.status(409).json({
                 error: "Verified claim already exists",
